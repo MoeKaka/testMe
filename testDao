@@ -1,3 +1,84 @@
+package com.example;
+
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import java.sql.Clob;
+import java.util.Date;
+import java.util.List;
+import java.util.Arrays;
+
+@RunWith(MockitoJUnitRunner.class)
+public class MyQueryJpaDaoTest {
+
+    @Mock
+    private EntityManager entityManager;
+
+    @Mock
+    private Query query;
+
+    private MyQueryJpaDao dao;
+
+    @Before
+    public void setUp() {
+        dao = new MyQueryJpaDao() {
+            @Override
+            protected EntityManager getEntityManager() {
+                return entityManager;
+            }
+        };
+        
+        // Basic setup
+        when(entityManager.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+    }
+
+    @Test
+    public void testExecuteQueries() {
+        // Setup test data
+        Date testDate = new Date();
+        List<Object[]> reportDataList = Arrays.asList(
+            new Object[]{"TestQuelle", "TestName", "TestRepR", testDate, testDate, testDate, testDate}
+        );
+
+        List<Object[]> xmlDataList = Arrays.asList(
+            new Object[]{"TestCountry", "TestMRefId", null}
+        );
+
+        // Sequential mocking of getResultList() calls
+        when(query.getResultList())
+            .thenReturn(reportDataList)   // First call returns report data
+            .thenReturn(xmlDataList)      // Second call returns XML data
+            .thenReturn(xmlDataList);     // Third call returns XML data
+
+        // Execute test
+        QueriesResults results = dao.executeQueries(1);
+
+        // Debug print
+        System.out.println("Report Data size: " + results.getReportData().size());
+        System.out.println("XML Data size: " + results.getXmlFragmentData().size());
+
+        // Basic verification
+        assertNotNull(results);
+        assertNotNull(results.getReportData());
+        assertNotNull(results.getXmlFragmentData());
+
+        // Verify query was called the expected number of times
+        verify(entityManager, times(3)).createNativeQuery(anyString());
+        verify(query, times(3)).setParameter(anyString(), any());
+        verify(query, times(3)).getResultList();
+    }
+}
+
+
 
 
 package com.example;
