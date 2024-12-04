@@ -13,7 +13,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.Date;
 import java.util.stream.Stream;
-import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MyQueryJpaDaoTest {
@@ -41,12 +42,11 @@ public class MyQueryJpaDaoTest {
 
     @Test
     public void testSimpleExecuteQueries() {
-        // Create a Stream of type Object[]
-        Stream<Object[]> streamOfArrays = Arrays.asList(
-            new Object[]{"TestQuelle", "TestName", "TestRepR", new Date(), new Date(), new Date(), new Date()}
-        ).stream();
+        // Create a properly typed list
+        List<Object[]> list = new ArrayList<>();
+        list.add(new Object[]{"TestQuelle", "TestName", "TestRepR", new Date(), new Date(), new Date(), new Date()});
         
-        when(query.getResultStream()).thenReturn(streamOfArrays);
+        when(query.getResultStream()).thenReturn(list.stream());
 
         QueriesResults results = dao.executeQueries(1);
 
