@@ -1,0 +1,169 @@
+package com.example;
+
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import java.io.Reader;
+import java.sql.Clob;
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Stream;
+
+@RunWith(MockitoJUnitRunner.class)
+public class MyQueryJpaDaoTest {
+
+    @Mock
+    private EntityManager entityManager;
+
+    @Mock
+    private Query query;
+
+    private MyQueryJpaDao dao;
+
+    @Before
+    public void setUp() {
+        // Create test instance with mocked EntityManager
+        dao = new MyQueryJpaDao() {
+            @Override
+            protected EntityManager getEntityManager() {
+                return entityManager;
+            }
+        };
+        
+        // Basic query setup
+        when(entityManager.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+    }
+
+    @Test
+    public void testExecuteQueriesSuccess() throws Exception {
+        // Setup test data
+        Date testDate = new Date();
+        Object[] reportData = new Object[]{
+            "TestQuelle", 
+            "TestName", 
+            "TestRepR", 
+            testDate, // repPerS
+            testDate, // repPerE
+            testDate, // repPer
+            testDate  // DES_EX_TS
+        };
+
+        // Setup CLOB data for XML fragments
+        Clob mockClob = mock(Clob.class);
+        Reader mockReader = mock(Reader.class);
+        when(mockClob.getCharacterStream()).thenReturn(mockReader);
+        when(mockReader.read(any(char[].class), anyInt(), anyInt()))
+            .thenReturn("Test XML Content".getBytes().length)
+            .thenReturn(-1);
+
+        Object[] xmlFragmentData = new Object[]{
+            "TestCountry",
+            "TestMRefId",
+            mockClob
+        };
+
+        // Mock stream results for different queries
+        when(query.getResultStream())
+            .thenReturn(Stream.of(reportData))       // First query (sqlA)
+            .thenReturn(Stream.of(xmlFragmentData))  // Second query (sqlB1)
+            .thenReturn(Stream.of(xmlFragmentData)); // Third query (sqlB2)
+
+        // Execute test
+        QueriesResults results = dao.executeQueries(1);
+
+        // Verify results are not empty
+        assertNotNull(results);
+        assertFalse(results.getReportData().isEmpty());
+        assertFalse(results.getXmlFragmentData().isEmpty());
+
+        // Verify report data
+        QueriesResults.ReportData actualReportData = results.getReportData().get(0);
+        assertEquals("TestQuelle", actualReportData.getQuelle());
+        assertEquals("TestName", actualReportData.getName());
+        assertEquals("TestRepR", actualReportData.getRepR());
+        assertEquals(testDate, actualReportData.getRepPerS());
+        assertEquals(testDate, actualReportData.getRepPerE());
+        assertEquals(testDate, actualReportData.getRepPer());
+        assertEquals(testDate, actualReportData.getDesExTs());
+
+        // Verify XML fragment data
+        List<QueriesResults.XmlFragmentData> xmlFragments = results.getXmlFragmentData();
+        assertEquals(2, xmlFragments.size()); // Should have results from both queries
+        
+        QueriesResults.XmlFragmentData xmlData = xmlFragments.get(0);
+        assertEquals("TestCountry", xmlData.getCountry());
+        assertEquals("TestMRefId", xmlData.getmRefId());
+        assertNotNull(xmlData.getXmlFragment());
+
+        // Verify interactions
+        verify(entityManager, times(3)).createNativeQuery(anyString());
+        verify(query, times(3)).setParameter(anyString(), any());
+    }
+
+    @Test
+    public void testExecuteQueriesWithNullValues() {
+        // Setup test data with null values
+        Object[] reportData = new Object[7]; // All nulls
+        Object[] xmlFragmentData = new Object[3]; // All nulls
+
+        // Mock stream results
+        when(query.getResultStream())
+            .thenReturn(Stream.of(reportData))
+            .thenReturn(Stream.of(xmlFragmentData))
+            .thenReturn(Stream.of(xmlFragmentData));
+
+        // Execute test
+        QueriesResults results = dao.executeQueries(1);
+
+        // Verify results
+        assertNotNull(results);
+        assertFalse(results.getReportData().isEmpty());
+        
+        // Verify null handling in report data
+        QueriesResults.ReportData reportDataResult = results.getReportData().get(0);
+        assertNull(reportDataResult.getQuelle());
+        assertNull(reportDataResult.getName());
+        assertNull(reportDataResult.getRepR());
+        assertNull(reportDataResult.getRepPerS());
+        assertNull(reportDataResult.getRepPerE());
+        assertNull(reportDataResult.getRepPer());
+        assertNull(reportDataResult.getDesExTs());
+
+        // Verify XML fragment data
+        List<QueriesResults.XmlFragmentData> xmlFragments = results.getXmlFragmentData();
+        assertNotNull(xmlFragments);
+        assertEquals(2, xmlFragments.size());
+        
+        QueriesResults.XmlFragmentData xmlData = xmlFragments.get(0);
+        assertNull(xmlData.getCountry());
+        assertNull(xmlData.getmRefId());
+        assertNull(xmlData.getXmlFragment());
+    }
+
+    @Test
+    public void testExecuteQueriesWithEmptyResults() {
+        // Mock empty results for all queries
+        when(query.getResultStream()).thenReturn(Stream.empty());
+
+        // Execute test
+        QueriesResults results = dao.executeQueries(1);
+
+        // Verify results
+        assertNotNull(results);
+        assertTrue(results.getReportData().isEmpty());
+        assertTrue(results.getXmlFragmentData().isEmpty());
+
+        // Verify queries were still executed
+        verify(entityManager, times(3)).createNativeQuery(anyString());
+        verify(query, times(3)).setParameter(anyString(), any());
+    }
+}
