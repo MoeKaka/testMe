@@ -10,6 +10,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 import java.io.StringReader;
+import java.lang.reflect.Field;
 import java.sql.Clob;
 import java.util.Date;
 import java.util.stream.Stream;
@@ -38,13 +39,30 @@ public class MyQueryJpaDaoTest {
 
     @Before
     public void setUp() throws Exception {
-        // Setup query mocking
+        // Create the DAO
+        dao = new MyQueryJpaDao();
+        
+        // Use reflection to inject our mocks
+        injectMocks(dao);
+        
+        // Setup basic mocking behavior
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
         when(mockClob.getCharacterStream()).thenReturn(new StringReader("<xml>Test</xml>"));
+    }
 
-        // Create dao instance with mocked dependencies
-        dao = new MyQueryJpaDao(emf, entityManager);
+    private void injectMocks(MyQueryJpaDao dao) throws Exception {
+        // Get the fields through reflection
+        Field emField = MyQueryJpaDao.class.getDeclaredField("emf");
+        Field emManagerField = MyQueryJpaDao.class.getDeclaredField("entityManager");
+        
+        // Make them accessible
+        emField.setAccessible(true);
+        emManagerField.setAccessible(true);
+        
+        // Set our mocks
+        emField.set(dao, emf);
+        emManagerField.set(dao, entityManager);
     }
 
     @Test
@@ -53,7 +71,7 @@ public class MyQueryJpaDaoTest {
         int reportId = 1;
         Date testDate = new Date();
 
-        // First query result - single Object array with 7 elements
+        // First query result - Object array with 7 elements
         Object[] firstQueryResult = new Object[] {
             "QUELLE_TEST",  // QUELLE
             "NAME_TEST",    // NAME
@@ -77,11 +95,11 @@ public class MyQueryJpaDaoTest {
             mockClob       // XML_FRAGMENT
         };
 
-        // Mock the streams - each query returns a stream of Object[]
+        // Mock the query result streams
         when(query.getResultStream())
-            .thenReturn(Stream.of(firstQueryResult))  // First query
-            .thenReturn(Stream.of(xmlFragmentDE))     // Second query
-            .thenReturn(Stream.of(xmlFragmentDI));    // Third query
+            .thenReturn(Stream.of(firstQueryResult))
+            .thenReturn(Stream.of(xmlFragmentDE))
+            .thenReturn(Stream.of(xmlFragmentDI));
 
         // Act
         QueriesResults results = dao.executeQueries(reportId);
@@ -90,7 +108,7 @@ public class MyQueryJpaDaoTest {
         assertNotNull("Results should not be null", results);
         
         // Verify report data
-        assertEquals("Should have one report data entry", 1, results.getReportData().size());
+        assertEquals(1, results.getReportData().size());
         QueriesResults.ReportData reportData = results.getReportData().get(0);
         assertEquals("QUELLE_TEST", reportData.getQuelle());
         assertEquals("NAME_TEST", reportData.getName());
@@ -101,7 +119,7 @@ public class MyQueryJpaDaoTest {
         assertEquals(testDate, reportData.getDesExTs());
         
         // Verify XML fragments
-        assertEquals("Should have two XML fragments", 2, results.getXmlFragments().size());
+        assertEquals(2, results.getXmlFragments().size());
         
         // Verify DE fragment
         QueriesResults.XmlFragmentData deFragment = results.getXmlFragments().get(0);
@@ -118,6 +136,7 @@ public class MyQueryJpaDaoTest {
 
     @Test
     public void testExecuteQueries_NoResults() {
+        // Mock empty results
         when(query.getResultStream())
             .thenReturn(Stream.empty())
             .thenReturn(Stream.empty())
@@ -125,8 +144,8 @@ public class MyQueryJpaDaoTest {
 
         QueriesResults results = dao.executeQueries(1);
 
-        assertNotNull("Results should not be null", results);
-        assertTrue("Report data should be empty", results.getReportData().isEmpty());
-        assertTrue("XML fragments should be empty", results.getXmlFragments().isEmpty());
+        assertNotNull(results);
+        assertTrue(results.getReportData().isEmpty());
+        assertTrue(results.getXmlFragments().isEmpty());
     }
 }
