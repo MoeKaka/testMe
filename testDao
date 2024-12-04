@@ -13,6 +13,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.Date;
 import java.util.stream.Stream;
+import java.util.Arrays;
 
 @RunWith(MockitoJUnitRunner.class)
 public class MyQueryJpaDaoTest {
@@ -40,17 +41,15 @@ public class MyQueryJpaDaoTest {
 
     @Test
     public void testSimpleExecuteQueries() {
-        // Create single test data array
-        Date testDate = new Date();
-        Object[] testRow = new Object[]{"TestQuelle", "TestName", "TestRepR", testDate, testDate, testDate, testDate};
+        // Create a Stream of type Object[]
+        Stream<Object[]> streamOfArrays = Arrays.asList(
+            new Object[]{"TestQuelle", "TestName", "TestRepR", new Date(), new Date(), new Date(), new Date()}
+        ).stream();
         
-        // Mock only first query result
-        when(query.getResultStream()).thenReturn(Stream.of(testRow));
+        when(query.getResultStream()).thenReturn(streamOfArrays);
 
-        // Execute test
         QueriesResults results = dao.executeQueries(1);
 
-        // Just verify it's not null for now
         assertNotNull(results);
     }
 }
