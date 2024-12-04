@@ -1,3 +1,157 @@
+
+
+package com.example;
+
+import static org.mockito.Mockito.*;
+import static org.junit.Assert.*;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+
+import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import java.io.Reader;
+import java.sql.Clob;
+import java.util.Date;
+import java.util.List;
+import java.util.Arrays;
+
+@RunWith(MockitoJUnitRunner.class)
+public class MyQueryJpaDaoTest {
+
+    @Mock
+    private EntityManager entityManager;
+
+    @Mock
+    private Query queryA;
+
+    @Mock
+    private Query queryB1;
+
+    @Mock
+    private Query queryB2;
+
+    private MyQueryJpaDao dao;
+
+    private static final String SQL_A = "SELECT b.QUELLE, m.NAME, b.repR, r.repPerS, r.repPerE, r.repPer, r.DES_EX_TS FROM CbRep r JOIN Cb_M_I m ON m.ID = r.REF_M_I JOIN Cb_Lief_Body b ON b.REF_Cb_REP = r.id WHERE r.id = :id";
+    private static final String SQL_B1 = "SELECT l.COUNTRY, l.M_REF_ID, convert_blob_to_xmltype(h.xml_fragment).getClobVal() as XML_FRAGMENT FROM CbRep r JOIN Cb_Lief_Body b ON b.REF_Cb_REP = r.id JOIN cB_DE_Lief l ON l.id = b.REF_DE_Lief_ID JOIN cB_DE_Lief_HIST h ON h.REF_DE_Lief = l.id AND h.REF_BODY = b.id WHERE r.id = :reportId AND l.STATUS = 'ACCEPTED' AND h.STATUS = 'FREIGEGEBEN' AND h.F_C_R = 1 AND h.D_T_I <> 'KAKA_3'";
+    private static final String SQL_B2 = "SELECT l.COUNTRY, l.M_REF_ID, convert_blob_to_xmltype(h.xml_fragment).getClobVal() as XML_FRAGMENT FROM CbRep r JOIN Cb_Lief_Body b ON b.REF_Cb_REP = r.id JOIN Cb_DI_Lief l ON l.id = b.REF_DI_Lief_ID JOIN Cb_DI_Lief_HISTORIE h ON h.REF_DI_Lief = l.id AND h.REF_DI_Lief = l.id WHERE r.id = :reportId1 AND l.LiefSt_DI = 'ACCEPTED' AND h.STATUS IN ('FREIGEGEBEN', 'EINGESCHRAENKT_FREIGEGEBEN') AND h.F_C_R = 1 AND h.D_T_I <> 'KAKA_3'";
+
+    @Before
+    public void setUp() {
+        dao = new MyQueryJpaDao() {
+            @Override
+            protected EntityManager getEntityManager() {
+                return entityManager;
+            }
+        };
+        
+        // Setup different queries for each SQL statement
+        when(entityManager.createNativeQuery(SQL_A)).thenReturn(queryA);
+        when(entityManager.createNativeQuery(SQL_B1)).thenReturn(queryB1);
+        when(entityManager.createNativeQuery(SQL_B2)).thenReturn(queryB2);
+        
+        when(queryA.setParameter(anyString(), any())).thenReturn(queryA);
+        when(queryB1.setParameter(anyString(), any())).thenReturn(queryB1);
+        when(queryB2.setParameter(anyString(), any())).thenReturn(queryB2);
+    }
+
+    @Test
+    public void testExecuteQueriesSuccess() throws Exception {
+        // Setup test data
+        Date testDate = new Date();
+        Object[] reportData = new Object[]{
+            "TestQuelle", 
+            "TestName", 
+            "TestRepR", 
+            testDate, 
+            testDate, 
+            testDate, 
+            testDate
+        };
+
+        // Setup CLOB data
+        Clob mockClob = mock(Clob.class);
+        Reader mockReader = mock(Reader.class);
+        when(mockClob.getCharacterStream()).thenReturn(mockReader);
+        when(mockReader.read(any(char[].class), anyInt(), anyInt()))
+            .thenReturn("Test XML Content".getBytes().length)
+            .thenReturn(-1);
+
+        Object[] xmlFragmentData = new Object[]{
+            "TestCountry",
+            "TestMRefId",
+            mockClob
+        };
+
+        // Mock results for each query
+        when(queryA.getResultList()).thenReturn(Arrays.asList(reportData));
+        when(queryB1.getResultList()).thenReturn(Arrays.asList(xmlFragmentData));
+        when(queryB2.getResultList()).thenReturn(Arrays.asList(xmlFragmentData));
+
+        // Execute test
+        QueriesResults results = dao.executeQueries(1);
+
+        // Verify results
+        assertNotNull(results);
+        assertFalse(results.getReportData().isEmpty());
+        assertFalse(results.getXmlFragmentData().isEmpty());
+
+        // Verify report data
+        QueriesResults.ReportData actualReportData = results.getReportData().get(0);
+        assertEquals("TestQuelle", actualReportData.getQuelle());
+        assertEquals("TestName", actualReportData.getName());
+        assertEquals("TestRepR", actualReportData.getRepR());
+        assertEquals(testDate, actualReportData.getRepPerS());
+
+        // Verify XML fragment data
+        List<QueriesResults.XmlFragmentData> xmlFragments = results.getXmlFragmentData();
+        assertEquals(2, xmlFragments.size());
+        
+        QueriesResults.XmlFragmentData xmlData = xmlFragments.get(0);
+        assertEquals("TestCountry", xmlData.getCountry());
+        assertEquals("TestMRefId", xmlData.getmRefId());
+        assertNotNull(xmlData.getXmlFragment());
+
+        // Verify query executions
+        verify(entityManager).createNativeQuery(SQL_A);
+        verify(entityManager).createNativeQuery(SQL_B1);
+        verify(entityManager).createNativeQuery(SQL_B2);
+        verify(queryA).setParameter("id", 1L);
+        verify(queryB1).setParameter("reportId", 1L);
+        verify(queryB2).setParameter("reportId1", 1L);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package com.example;
 
 import static org.mockito.Mockito.*;
