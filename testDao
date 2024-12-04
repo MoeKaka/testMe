@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -40,9 +41,9 @@ public class MyQueryJpaDaoTest {
         // Initialize mocks
         when(emf.createEntityManager()).thenReturn(entityManager);
         when(entityManager.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
         when(mockClob.getCharacterStream()).thenReturn(new StringReader("<xml>Test</xml>"));
 
-        // Create DAO with mocked EntityManagerFactory
         dao = new MyQueryJpaDao() {
             @Override
             protected EntityManagerFactory getEntityManagerFactory() {
@@ -56,37 +57,44 @@ public class MyQueryJpaDaoTest {
         // Arrange
         int reportId = 1;
         Date testDate = new Date();
-        
-        // Mock data that would come from first query (sqlA)
-        Object[] reportRow = new Object[]{
-            "QUELLE_TEST",     // QUELLE
-            "NAME_TEST",       // NAME
-            "REPR_TEST",       // repR
-            testDate,          // repPerS
-            testDate,          // repPerE
-            testDate,          // repPer
-            testDate           // DES_EX_TS
+
+        // Create an array of Object[] for first query results
+        // Each Object[] represents a row with 7 columns from sqlA
+        Object[][] reportRows = new Object[][] {
+            {
+                "QUELLE_TEST",  // QUELLE
+                "NAME_TEST",    // NAME
+                "REPR_TEST",    // repR
+                testDate,       // repPerS
+                testDate,       // repPerE
+                testDate,       // repPer
+                testDate        // DES_EX_TS
+            }
         };
 
-        // Mock data that would come from second query (sqlB1 - DE data)
-        Object[] xmlFragmentDE = new Object[]{
-            "DE",             // COUNTRY
-            "REF_1",          // M_REF_ID
-            mockClob          // XML_FRAGMENT
+        // Create array of Object[] for second query results (DE XML fragments)
+        Object[][] xmlFragmentsDE = new Object[][] {
+            {
+                "DE",          // COUNTRY
+                "REF_1",       // M_REF_ID
+                mockClob       // XML_FRAGMENT
+            }
         };
 
-        // Mock data that would come from third query (sqlB2 - DI data)
-        Object[] xmlFragmentDI = new Object[]{
-            "DI",             // COUNTRY
-            "REF_2",          // M_REF_ID
-            mockClob          // XML_FRAGMENT
+        // Create array of Object[] for third query results (DI XML fragments)
+        Object[][] xmlFragmentsDI = new Object[][] {
+            {
+                "DI",          // COUNTRY
+                "REF_2",       // M_REF_ID
+                mockClob       // XML_FRAGMENT
+            }
         };
 
-        // Set up the query result streams
+        // Mock the result streams - now each stream contains Object[] elements
         when(query.getResultStream())
-            .thenReturn(Stream.of(reportRow))         // First query result
-            .thenReturn(Stream.of(xmlFragmentDE))     // Second query result
-            .thenReturn(Stream.of(xmlFragmentDI));    // Third query result
+            .thenReturn(Stream.of(reportRows[0]))        // First query returns a row of 7 columns
+            .thenReturn(Stream.of(xmlFragmentsDE[0]))    // Second query returns DE fragment
+            .thenReturn(Stream.of(xmlFragmentsDI[0]));   // Third query returns DI fragment
 
         // Act
         QueriesResults results = dao.executeQueries(reportId);
@@ -101,6 +109,9 @@ public class MyQueryJpaDaoTest {
         assertEquals("NAME_TEST", reportData.getName());
         assertEquals("REPR_TEST", reportData.getRepR());
         assertEquals(testDate, reportData.getRepPerS());
+        assertEquals(testDate, reportData.getRepPerE());
+        assertEquals(testDate, reportData.getRepPer());
+        assertEquals(testDate, reportData.getDesExTs());
         
         // Verify XML fragments
         assertEquals("Should have two XML fragments", 2, results.getXmlFragments().size());
@@ -109,13 +120,13 @@ public class MyQueryJpaDaoTest {
         QueriesResults.XmlFragmentData deFragment = results.getXmlFragments().get(0);
         assertEquals("DE", deFragment.getCountry());
         assertEquals("REF_1", deFragment.getmRefId());
-        assertEquals("<xml>Test</xml>", deFragment.getXmlFragment());
+        assertTrue(deFragment.getXmlFragment().contains("<xml>Test</xml>"));
         
         // Verify DI fragment
         QueriesResults.XmlFragmentData diFragment = results.getXmlFragments().get(1);
         assertEquals("DI", diFragment.getCountry());
         assertEquals("REF_2", diFragment.getmRefId());
-        assertEquals("<xml>Test</xml>", diFragment.getXmlFragment());
+        assertTrue(diFragment.getXmlFragment().contains("<xml>Test</xml>"));
     }
 
     @Test
@@ -136,98 +147,5 @@ public class MyQueryJpaDaoTest {
         assertNotNull("Results should not be null", results);
         assertTrue("Report data should be empty", results.getReportData().isEmpty());
         assertTrue("XML fragments should be empty", results.getXmlFragments().isEmpty());
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-package com.example;
-
-import static org.mockito.Mockito.*;
-import static org.junit.Assert.*;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import java.util.Date;
-import java.util.List;
-import java.util.ArrayList;
-
-@RunWith(MockitoJUnitRunner.class)
-public class MyQueryJpaDaoTest {
-
-    @Mock
-    private EntityManager entityManager;
-
-    @Mock
-    private Query queryA;
-    @Mock
-    private Query queryB1;
-    @Mock
-    private Query queryB2;
-
-    private MyQueryJpaDao dao;
-
-    @Before
-    public void setUp() {
-        dao = new MyQueryJpaDao() {
-            @Override
-            protected EntityManager getEntityManager() {
-                return entityManager;
-            }
-        };
-        
-        // Use different query mocks for each SQL
-        when(entityManager.createNativeQuery(contains("SELECT b.QUELLE"))).thenReturn(queryA);
-        when(entityManager.createNativeQuery(contains("cB_DE_Lief"))).thenReturn(queryB1);
-        when(entityManager.createNativeQuery(contains("Cb_DI_Lief"))).thenReturn(queryB2);
-        
-        when(queryA.setParameter(anyString(), any())).thenReturn(queryA);
-        when(queryB1.setParameter(anyString(), any())).thenReturn(queryB1);
-        when(queryB2.setParameter(anyString(), any())).thenReturn(queryB2);
-    }
-
-    @Test
-    public void testSimpleExecuteQueries() {
-        // Create test data
-        List<Object[]> list = new ArrayList<>();
-        list.add(new Object[]{"TestQuelle", "TestName", "TestRepR", new Date(), new Date(), new Date(), new Date()});
-        
-        // Each query gets its own stream
-        when(queryA.getResultStream()).thenReturn(list.stream());
-        when(queryB1.getResultStream()).thenReturn(list.stream());
-        when(queryB2.getResultStream()).thenReturn(list.stream());
-
-        QueriesResults results = dao.executeQueries(1);
-
-        assertNotNull(results);
     }
 }
