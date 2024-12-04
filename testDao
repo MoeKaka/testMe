@@ -1,3 +1,66 @@
+
+Report Data size: 0
+XML Data size: 0
+
+
+Wanted but not invoked:
+query.getResultList();
+-> at MyQueryJpaDaoTest.testExecuteQueries(MyQueryJpaDaoTest.java:81)
+
+However, there were exactly 6 interactions with this mock:
+query.setParameter("id", 1L);
+-> at MyQueryJpaDao.executeQueries(MyQueryJpaDao.java:40)
+
+query.getResultStream();
+-> at MyQueryJpaDao.executeQueries(MyQueryJpaDao.java:41)
+
+query.setParameter("reportId", 1L);
+-> at MyQueryJpaDao.executeQueries(MyQueryJpaDao.java:66)
+
+query.getResultStream();
+-> at MyQueryJpaDao.executeQueries(MyQueryJpaDao.java:66)
+
+query.setParameter("reportId1", 1L);
+-> at MyQueryJpaDao.executeQueries(MyQueryJpaDao.java:75)
+
+query.getResultStream();
+-> at MyQueryJpaDao.executeQueries(MyQueryJpaDao.java:75)
+
+
+Wanted but not invoked:
+query.getResultList();
+-> at MyQueryJpaDaoTest.testExecuteQueries(MyQueryJpaDaoTest.java:81)
+
+However, there were exactly 6 interactions with this mock:
+query.setParameter("id", 1L);
+-> at MyQueryJpaDao.executeQueries(MyQueryJpaDao.java:40)
+
+query.getResultStream();
+-> at MyQueryJpaDao.executeQueries(MyQueryJpaDao.java:41)
+
+query.setParameter("reportId", 1L);
+-> at MyQueryJpaDao.executeQueries(MyQueryJpaDao.java:66)
+
+query.getResultStream();
+-> at MyQueryJpaDao.executeQueries(MyQueryJpaDao.java:66)
+
+query.setParameter("reportId1", 1L);
+-> at MyQueryJpaDao.executeQueries(MyQueryJpaDao.java:75)
+
+query.getResultStream();
+-> at MyQueryJpaDao.executeQueries(MyQueryJpaDao.java:75)
+
+
+
+Process finished with exit code -1
+
+
+
+
+
+
+
+
 package com.example;
 
 import static org.mockito.Mockito.*;
