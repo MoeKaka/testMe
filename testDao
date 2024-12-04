@@ -12,7 +12,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import java.util.Date;
-import java.util.stream.Stream;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -23,7 +22,11 @@ public class MyQueryJpaDaoTest {
     private EntityManager entityManager;
 
     @Mock
-    private Query query;
+    private Query queryA;
+    @Mock
+    private Query queryB1;
+    @Mock
+    private Query queryB2;
 
     private MyQueryJpaDao dao;
 
@@ -36,17 +39,26 @@ public class MyQueryJpaDaoTest {
             }
         };
         
-        when(entityManager.createNativeQuery(anyString())).thenReturn(query);
-        when(query.setParameter(anyString(), any())).thenReturn(query);
+        // Use different query mocks for each SQL
+        when(entityManager.createNativeQuery(contains("SELECT b.QUELLE"))).thenReturn(queryA);
+        when(entityManager.createNativeQuery(contains("cB_DE_Lief"))).thenReturn(queryB1);
+        when(entityManager.createNativeQuery(contains("Cb_DI_Lief"))).thenReturn(queryB2);
+        
+        when(queryA.setParameter(anyString(), any())).thenReturn(queryA);
+        when(queryB1.setParameter(anyString(), any())).thenReturn(queryB1);
+        when(queryB2.setParameter(anyString(), any())).thenReturn(queryB2);
     }
 
     @Test
     public void testSimpleExecuteQueries() {
-        // Create a properly typed list
+        // Create test data
         List<Object[]> list = new ArrayList<>();
         list.add(new Object[]{"TestQuelle", "TestName", "TestRepR", new Date(), new Date(), new Date(), new Date()});
         
-        when(query.getResultStream()).thenReturn(list.stream());
+        // Each query gets its own stream
+        when(queryA.getResultStream()).thenReturn(list.stream());
+        when(queryB1.getResultStream()).thenReturn(list.stream());
+        when(queryB2.getResultStream()).thenReturn(list.stream());
 
         QueriesResults results = dao.executeQueries(1);
 
