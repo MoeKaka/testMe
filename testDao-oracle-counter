@@ -52,15 +52,12 @@ public class MyQueryJpaDaoTest {
     }
 
     private void injectMocks(MyQueryJpaDao dao) throws Exception {
-        // Get the fields through reflection
         Field emField = MyQueryJpaDao.class.getDeclaredField("emf");
         Field emManagerField = MyQueryJpaDao.class.getDeclaredField("entityManager");
         
-        // Make them accessible
         emField.setAccessible(true);
         emManagerField.setAccessible(true);
         
-        // Set our mocks
         emField.set(dao, emf);
         emManagerField.set(dao, entityManager);
     }
@@ -70,36 +67,38 @@ public class MyQueryJpaDaoTest {
         // Arrange
         int reportId = 1;
         Date testDate = new Date();
-
-        // First query result - Object array with 7 elements
-        Object[] firstQueryResult = new Object[] {
-            "QUELLE_TEST",  // QUELLE
-            "NAME_TEST",    // NAME
-            "REPR_TEST",    // repR
-            testDate,       // repPerS
-            testDate,       // repPerE
-            testDate,       // repPer
-            testDate        // DES_EX_TS
+        
+        // Mock data for first query (7 values)
+        Object[][] firstQueryResults = {
+            {
+                "QUELLE_1",    // QUELLE
+                "NAME_1",      // NAME
+                "RepR_1",      // repR
+                testDate,      // repPerS
+                testDate,      // repPerE
+                testDate,      // repPer
+                testDate       // DES_EX_TS
+            },
+            {
+                "QUELLE_2",    // QUELLE
+                "NAME_2",      // NAME
+                "RepR_2",      // repR
+                testDate,      // repPerS
+                testDate,      // repPerE
+                testDate,      // repPer
+                testDate       // DES_EX_TS
+            }
         };
 
-        // XML fragments query results
-        Object[] xmlFragmentDE = new Object[] {
-            "DE",          // COUNTRY
-            "REF_1",       // M_REF_ID
-            mockClob       // XML_FRAGMENT
-        };
-
-        Object[] xmlFragmentDI = new Object[] {
-            "DI",          // COUNTRY
-            "REF_2",       // M_REF_ID
-            mockClob       // XML_FRAGMENT
-        };
-
-        // Mock the query result streams
+        // Mock the stream results
         when(query.getResultStream())
-            .thenReturn(Stream.of(firstQueryResult))
-            .thenReturn(Stream.of(xmlFragmentDE))
-            .thenReturn(Stream.of(xmlFragmentDI));
+            .thenReturn(Stream.of(firstQueryResults))     // First query with 7 values
+            .thenReturn(Stream.of(                        // Second query - DE fragment
+                new Object[]{"DE", "REF_1", mockClob}
+            ))
+            .thenReturn(Stream.of(                        // Third query - DI fragment
+                new Object[]{"DI", "REF_2", mockClob}
+            ));
 
         // Act
         QueriesResults results = dao.executeQueries(reportId);
@@ -108,18 +107,26 @@ public class MyQueryJpaDaoTest {
         assertNotNull("Results should not be null", results);
         
         // Verify report data
-        assertEquals(1, results.getReportData().size());
-        QueriesResults.ReportData reportData = results.getReportData().get(0);
-        assertEquals("QUELLE_TEST", reportData.getQuelle());
-        assertEquals("NAME_TEST", reportData.getName());
-        assertEquals("REPR_TEST", reportData.getRepR());
-        assertEquals(testDate, reportData.getRepPerS());
-        assertEquals(testDate, reportData.getRepPerE());
-        assertEquals(testDate, reportData.getRepPer());
-        assertEquals(testDate, reportData.getDesExTs());
+        assertEquals("Should have two report data entries", 2, results.getReportData().size());
+        
+        // Verify first report
+        QueriesResults.ReportData firstReport = results.getReportData().get(0);
+        assertEquals("QUELLE_1", firstReport.getQuelle());
+        assertEquals("NAME_1", firstReport.getName());
+        assertEquals("RepR_1", firstReport.getRepR());
+        assertEquals(testDate, firstReport.getRepPerS());
+        assertEquals(testDate, firstReport.getRepPerE());
+        assertEquals(testDate, firstReport.getRepPer());
+        assertEquals(testDate, firstReport.getDesExTs());
+        
+        // Verify second report
+        QueriesResults.ReportData secondReport = results.getReportData().get(1);
+        assertEquals("QUELLE_2", secondReport.getQuelle());
+        assertEquals("NAME_2", secondReport.getName());
+        assertEquals("RepR_2", secondReport.getRepR());
         
         // Verify XML fragments
-        assertEquals(2, results.getXmlFragments().size());
+        assertEquals("Should have two XML fragments", 2, results.getXmlFragments().size());
         
         // Verify DE fragment
         QueriesResults.XmlFragmentData deFragment = results.getXmlFragments().get(0);
