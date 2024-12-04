@@ -1,0 +1,132 @@
+package com.example;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Query;
+import java.io.StringReader;
+import java.sql.Clob;
+import java.util.Date;
+import java.util.stream.Stream;
+
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+@RunWith(MockitoJUnitRunner.class)
+public class MyQueryJpaDaoTest {
+
+    @Mock
+    private EntityManager entityManager;
+    
+    @Mock
+    private EntityManagerFactory emf;
+    
+    @Mock
+    private Query query;
+    
+    @Mock
+    private Clob mockClob;
+
+    private MyQueryJpaDao dao;
+
+    @Before
+    public void setUp() throws Exception {
+        // Setup query mocking
+        when(entityManager.createNativeQuery(anyString())).thenReturn(query);
+        when(query.setParameter(anyString(), any())).thenReturn(query);
+        when(mockClob.getCharacterStream()).thenReturn(new StringReader("<xml>Test</xml>"));
+
+        // Create dao instance with mocked dependencies
+        dao = new MyQueryJpaDao(emf, entityManager);
+    }
+
+    @Test
+    public void testExecuteQueries_Success() throws Exception {
+        // Arrange
+        int reportId = 1;
+        Date testDate = new Date();
+
+        // First query result - single Object array with 7 elements
+        Object[] firstQueryResult = new Object[] {
+            "QUELLE_TEST",  // QUELLE
+            "NAME_TEST",    // NAME
+            "REPR_TEST",    // repR
+            testDate,       // repPerS
+            testDate,       // repPerE
+            testDate,       // repPer
+            testDate        // DES_EX_TS
+        };
+
+        // XML fragments query results
+        Object[] xmlFragmentDE = new Object[] {
+            "DE",          // COUNTRY
+            "REF_1",       // M_REF_ID
+            mockClob       // XML_FRAGMENT
+        };
+
+        Object[] xmlFragmentDI = new Object[] {
+            "DI",          // COUNTRY
+            "REF_2",       // M_REF_ID
+            mockClob       // XML_FRAGMENT
+        };
+
+        // Mock the streams - each query returns a stream of Object[]
+        when(query.getResultStream())
+            .thenReturn(Stream.of(firstQueryResult))  // First query
+            .thenReturn(Stream.of(xmlFragmentDE))     // Second query
+            .thenReturn(Stream.of(xmlFragmentDI));    // Third query
+
+        // Act
+        QueriesResults results = dao.executeQueries(reportId);
+
+        // Assert
+        assertNotNull("Results should not be null", results);
+        
+        // Verify report data
+        assertEquals("Should have one report data entry", 1, results.getReportData().size());
+        QueriesResults.ReportData reportData = results.getReportData().get(0);
+        assertEquals("QUELLE_TEST", reportData.getQuelle());
+        assertEquals("NAME_TEST", reportData.getName());
+        assertEquals("REPR_TEST", reportData.getRepR());
+        assertEquals(testDate, reportData.getRepPerS());
+        assertEquals(testDate, reportData.getRepPerE());
+        assertEquals(testDate, reportData.getRepPer());
+        assertEquals(testDate, reportData.getDesExTs());
+        
+        // Verify XML fragments
+        assertEquals("Should have two XML fragments", 2, results.getXmlFragments().size());
+        
+        // Verify DE fragment
+        QueriesResults.XmlFragmentData deFragment = results.getXmlFragments().get(0);
+        assertEquals("DE", deFragment.getCountry());
+        assertEquals("REF_1", deFragment.getmRefId());
+        assertTrue(deFragment.getXmlFragment().contains("<xml>Test</xml>"));
+        
+        // Verify DI fragment
+        QueriesResults.XmlFragmentData diFragment = results.getXmlFragments().get(1);
+        assertEquals("DI", diFragment.getCountry());
+        assertEquals("REF_2", diFragment.getmRefId());
+        assertTrue(diFragment.getXmlFragment().contains("<xml>Test</xml>"));
+    }
+
+    @Test
+    public void testExecuteQueries_NoResults() {
+        when(query.getResultStream())
+            .thenReturn(Stream.empty())
+            .thenReturn(Stream.empty())
+            .thenReturn(Stream.empty());
+
+        QueriesResults results = dao.executeQueries(1);
+
+        assertNotNull("Results should not be null", results);
+        assertTrue("Report data should be empty", results.getReportData().isEmpty());
+        assertTrue("XML fragments should be empty", results.getXmlFragments().isEmpty());
+    }
+}
