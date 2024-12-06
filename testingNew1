@@ -1,3 +1,58 @@
+@Test
+public void testExecuteQueries_withLargeClob() throws SQLException {
+    // Arrange
+    int reportId = 1;
+    
+    // Create a large string with over 50000 chars
+    StringBuilder largeXml = new StringBuilder("<xml>");
+    for (int i = 0; i < 5000; i++) {
+        largeXml.append("<item>")
+                .append("Some test data for item ").append(i)
+                .append(" with extra padding text to increase size")
+                .append("</item>");
+    }
+    largeXml.append("</xml>");
+    
+    // Verify we actually created a string > 50000 chars
+    assertTrue("Test string should be over 50000 chars", largeXml.length() > 50000);
+    
+    // Mock the large CLOB
+    Clob largeClob = mock(Clob.class);
+    when(largeClob.getCharacterStream()).thenReturn(new StringReader(largeXml.toString()));
+    
+    // Mock single row result with the large CLOB
+    Object[] xmlFragmentRow = new Object[]{"TEST_COUNTRY", "TEST_REF", largeClob};
+    
+    // Mock minimum required report data
+    Object[] reportRow = new Object[]{"QUELLE_TEST", "NAME_TEST", "REP_R_TEST", 
+        new Date(), new Date(), new Date(), new Date()};
+    
+    // Set up query results
+    when(query.getResultStream())
+        .thenReturn(Stream.of(reportRow))      // First query (report data)
+        .thenReturn(Stream.of(xmlFragmentRow)) // Second query (DE fragments)
+        .thenReturn(Stream.empty());           // Third query (DI fragments)
+    
+    // Act
+    QueriesResults results = dao.executeQueries(reportId);
+    
+    // Assert
+    assertNotNull("Results should not be null", results);
+    assertEquals("Should have one XML fragment", 1, results.getXmlFragments().size());
+    
+    QueriesResults.XmlFragmentData fragment = results.getXmlFragments().get(0);
+    assertNotNull("XML fragment should not be null", fragment.getXmlFragment());
+    assertTrue("XML fragment should be over 50000 chars", 
+        fragment.getXmlFragment().length() > 50000);
+    assertTrue("XML fragment should start correctly", 
+        fragment.getXmlFragment().startsWith("<xml><item>"));
+    assertTrue("XML fragment should end correctly", 
+        fragment.getXmlFragment().endsWith("</xml>"));
+}
+
+
+
+
 private String clobToString(Object clobObject) {
     if (clobObject == null) {
         return null;
