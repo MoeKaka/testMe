@@ -1,0 +1,30 @@
+private String clobToString(Object clobObject) {
+    if (clobObject == null) {
+        return null;
+    }
+
+    try {
+        Clob clob = (Clob) clobObject;
+        
+        // Use a StringBuilder with the exact capacity needed
+        long length = clob.length();
+        if (length > Integer.MAX_VALUE) {
+            throw new RuntimeException("CLOB is too large to convert to String: " + length + " characters");
+        }
+        
+        StringBuilder sb = new StringBuilder((int) length);
+        
+        // Use a larger buffer size for better performance with large CLOBs
+        try (Reader reader = clob.getCharacterStream()) {
+            char[] buffer = new char[16384]; // 16KB buffer
+            int chars;
+            while ((chars = reader.read(buffer)) != -1) {
+                sb.append(buffer, 0, chars);
+            }
+        }
+        
+        return sb.toString();
+    } catch (SQLException | IOException e) {
+        throw new RuntimeException("Error reading CLOB data", e);
+    }
+}
