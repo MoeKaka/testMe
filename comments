@@ -1,9 +1,11 @@
 /**
- * Modifiziert das XML-Fragment durch zwei Operationen:
- * 1. Entfernt das XYZ-Element, falls vorhanden
- * 2. Setzt den Wert des ABC-Elements auf {@link #KAKA1}, falls nicht bereits gesetzt
+ * Ersetzt XML-Elementnamen von ihren Input-Typen zu ihren normalen Elementnamen:
+ * - CorrectableAAAType → AAA
+ * - CorrectableBBBType → BBB
+ * - CorrectableCCCType → CCC
  * 
- * @param xmlFragment Das zu modifizierende XML-Fragment
- * @return Das modifizierte XML-Fragment
+ * @param xmlFragment Das zu verarbeitende XML-Fragment
+ * @return Das XML-Fragment mit normalisierten Elementnamen
+ * @throws Exception wenn bei der XML-Verarbeitung ein Fehler auftritt
  */
-private String removeXYZ_And_Set_ABC_Element_To_Kaka1(String xmlFragment)
+private String replaceCorrectableRootTypesInBodyFragments(String xmlFragment) throws Exception
