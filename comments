@@ -1,18 +1,10 @@
 /**
- * Erstellt ein XYZ-XML-Fragment mit folgender Struktur:
- * <pre>
- * {@code
- * <XYZ>
- *   <country>xxx</country>
- *   <country1>xxx</country1>
- *   <msg>AA[Jahr]-[UUID]</msg>
- *   <date>[yyyy-MM-dd]</date>
- * </XYZ>
- * }
- * </pre>
+ * Erstellt den finalen XML-Dateiinhalt, indem das Message-Fragment und die Bodies 
+ * in einem Root-Element <XYZ> zusammengefasst werden.
  * 
- * @param reportPeriod Datum für die Erstellung des Fragments
- * @return Element Das erstellte XML-Fragment
- * @throws Exception wenn die Erstellung fehlschlägt
+ * @param bodies Liste der Body-Elemente
+ * @param messageFragment Das Message-Fragment
+ * @return String mit dem vollständigen XML-Inhalt
+ * @throws Exception wenn die XML-Erstellung fehlschlägt
  */
-private Element createXYZFragment(Date reportPeriod) throws Exception
+private String createFinalXmlFileContent(List<Element> bodies, Element messageFragment) throws Exception
