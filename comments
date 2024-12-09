@@ -1,11 +1,18 @@
 /**
- * Ersetzt XML-Elementnamen von ihren Input-Typen zu ihren normalen Elementnamen:
- * - CorrectableAAAType → AAA
- * - CorrectableBBBType → BBB
- * - CorrectableCCCType → CCC
+ * Erstellt ein XYZ-XML-Fragment mit folgender Struktur:
+ * <pre>
+ * {@code
+ * <XYZ>
+ *   <country>xxx</country>
+ *   <country1>xxx</country1>
+ *   <msg>AA[Jahr]-[UUID]</msg>
+ *   <date>[yyyy-MM-dd]</date>
+ * </XYZ>
+ * }
+ * </pre>
  * 
- * @param xmlFragment Das zu verarbeitende XML-Fragment
- * @return Das XML-Fragment mit normalisierten Elementnamen
- * @throws Exception wenn bei der XML-Verarbeitung ein Fehler auftritt
+ * @param reportPeriod Datum für die Erstellung des Fragments
+ * @return Element Das erstellte XML-Fragment
+ * @throws Exception wenn die Erstellung fehlschlägt
  */
-private String replaceCorrectableRootTypesInBodyFragments(String xmlFragment) throws Exception
+private Element createXYZFragment(Date reportPeriod) throws Exception
