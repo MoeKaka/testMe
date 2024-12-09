@@ -1,4 +1,11 @@
 /**
-* SQL-Abfrage für Bericht und zugehörige Body-Daten.
-* Enthält die Hauptabfrage zum Abrufen von Berichtsinformationen und deren Body-Inhalte.
+* Konvertiert ein CLOB-Objekt in einen String.
+* 
+* <p>Die Datenbankabfragen liefern XML-Fragmente als CLOB-Objekte zurück.
+* Diese Methode wird verwendet, um diese CLOB-Objekte in verarbeitbare 
+* String-Werte umzuwandeln.
+*
+* @param clobObject Das CLOB-Objekt, das das XML-Fragment enthält
+* @return Der extrahierte String-Inhalt des CLOBs
+* @throws SQLException Falls bei der CLOB-Verarbeitung ein Fehler auftritt
 */
