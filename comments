@@ -1,14 +1,4 @@
 /**
-* Unit-Tests für die {@link QueryJpaDao} Klasse.
-* Testet Datenzugriffsfunktionen und Abfrage-Funktionalität, die in QueryJpaDao implementiert sind.
-* 
-* <p>Diese Testklasse überprüft:
-* - Ausführung von Abfragen und Ergebnisverarbeitung
-* - Datenmapping zwischen Entities und DTOs
-* - Fehlerbehandlung und Randfälle
-* 
-* @see QueryJpaDao
+* SQL-Abfrage für Bericht und zugehörige Body-Daten.
+* Enthält die Hauptabfrage zum Abrufen von Berichtsinformationen und deren Body-Inhalte.
 */
-public class QueryJpaDaoTest {
-   // Klassenimplementierung
-}
