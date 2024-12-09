@@ -1,16 +1,8 @@
 /**
- * Erstellt einen Dateinamen nach dem Muster: sourcePart + "_" + XYZName + "_" + reportsYear + ("-" + MonthPart) + FileExtension
+ * Prüft, ob der Berichtszeitraum verkürzt ist.
  * 
- * @param queriesResults QueriesResults-Objekt mit den benötigten Informationen für den Dateinamen
- * @return String Der generierte Dateiname
- * 
- * <p><b>Namensbestandteile:</b></p>
- * <ul>
- * <li>sourcePart: Quelle des Berichts (xxx, yyy oder 950 für 950-Fälle)</li>
- * <li>XYZName: Name des XYZ, für den der Bericht erstellt wurde</li>
- * <li>reportsYear: Berichtsjahr</li>
- * <li>MonthPart: Optional, wird nur bei verkürzten Berichtszeiträumen verwendet</li>
- * <li>FileExtension: ".deleted" bei gelöschten Berichten, sonst ".xml"</li>
- * </ul>
+ * @param repPerStart Startdatum des Berichtszeitraums
+ * @param repPerEnd Enddatum des Berichtszeitraums
+ * @return true, wenn der Berichtszeitraum verkürzt ist, sonst false
  */
-private String buildFileName(QueriesResults queriesResults)
+private boolean isReportingPeriodShortened(Date repPerStart, Date repPerEnd)
