@@ -1,7 +1,16 @@
 /**
- * Ruft den Bericht und alle zugehörigen Bodies aus der Datenbank ab.
+ * Erstellt einen Dateinamen nach dem Muster: sourcePart + "_" + XYZName + "_" + reportsYear + ("-" + MonthPart) + FileExtension
  * 
- * @param reportId Die ID des abzurufenden Berichts
- * @return QueriesResults Objekt mit den Abfrageergebnissen für den Bericht und die Bodies
- * @throws DatabaseException wenn ein Datenbankfehler auftritt
+ * @param queriesResults QueriesResults-Objekt mit den benötigten Informationen für den Dateinamen
+ * @return String Der generierte Dateiname
+ * 
+ * <p><b>Namensbestandteile:</b></p>
+ * <ul>
+ * <li>sourcePart: Quelle des Berichts (xxx, yyy oder 950 für 950-Fälle)</li>
+ * <li>XYZName: Name des XYZ, für den der Bericht erstellt wurde</li>
+ * <li>reportsYear: Berichtsjahr</li>
+ * <li>MonthPart: Optional, wird nur bei verkürzten Berichtszeiträumen verwendet</li>
+ * <li>FileExtension: ".deleted" bei gelöschten Berichten, sonst ".xml"</li>
+ * </ul>
  */
+private String buildFileName(QueriesResults queriesResults)
