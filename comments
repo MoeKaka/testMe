@@ -1,64 +1,37 @@
 /**
- * Repräsentiert die Daten eines Reports mit verschiedenen Attributen und Zeitstempeln.
- * Diese statische innere Klasse ist Teil der QueriesResults-Klasse und enthält
- * detaillierte Informationen über einen einzelnen Report.
+ * Repräsentiert XML-Fragmentdaten mit länderspezifischen Informationen und Referenzen.
+ * Diese statische innere Klasse ist Teil der QueriesResults-Klasse und speichert
+ * XML-Fragmente zusammen mit ihren zugehörigen Metadaten.
  * 
  * @author [Autor]
  * @version [Version]
  */
-public static class RepData {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public static class XmlFragmentData {
     
-    /** Gibt an, ob Report-Daten existieren */
-    private boolean isRepExist = false;
+    /** Das Länderkürzel für das XML-Fragment */
+    private String country;
     
-    /** Die Quelle des Reports */
-    private String quelle;
+    /** Die Melde-Referenz-ID des XML-Fragments */
+    private String mRefId;
     
-    /** Der Name des Reports */
-    private String mName = null;
-    
-    /** Die Report-Referenz */
-    private String repR = null;
-    
-    /** Startzeitpunkt der Reportperiode */
-    private Date repPerS = null;
-    
-    /** Endzeitpunkt der Reportperiode */
-    private Date repPerE = null;
-    
-    /** Zeitpunkt des Reports */
-    private Date repPer = null;
-    
-    /** Zeitstempel der Beschreibung */
-    private Date desExTs = null;
+    /** Der eigentliche XML-Fragment-Inhalt */
+    private String xmlFragment;
 
     /**
      * Standardkonstruktor.
-     * Initialisiert ein neues RepData-Objekt mit Standardwerten.
+     * Wird durch die @NoArgsConstructor-Annotation von Lombok generiert.
      */
-    public RepData() {
-    }
 
     /**
      * Konstruktor mit vollständiger Initialisierung aller Felder.
+     * Wird durch die @AllArgsConstructor-Annotation von Lombok generiert.
      *
-     * @param quelle    Die Quelle des Reports
-     * @param mName     Der Name des Reports
-     * @param repR      Die Report-Referenz
-     * @param repPerS   Startzeitpunkt der Reportperiode
-     * @param repPerE   Endzeitpunkt der Reportperiode
-     * @param repPer    Zeitpunkt des Reports
-     * @param desExTs   Zeitstempel der Beschreibung
+     * @param country      Das Länderkürzel für das XML-Fragment
+     * @param mRefId       Die Melde-Referenz-ID des XML-Fragments
+     * @param xmlFragment  Der eigentliche XML-Fragment-Inhalt
      */
-    public RepData(String quelle, String mName, String repR, Date repPerS,
-            Date repPerE, Date repPer, Date desExTs) {
-        this.isRepExist = true;
-        this.quelle = quelle;
-        this.mName = mName;
-        this.repR = repR;
-        this.repPerS = repPerS;
-        this.repPerE = repPerE;
-        this.repPer = repPer;
-        this.desExTs = desExTs;
-    }
 }
