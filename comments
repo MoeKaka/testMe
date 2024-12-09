@@ -1,11 +1,8 @@
 /**
-* Konvertiert ein CLOB-Objekt in einen String.
+* Hilfsmethode zur Zählung der Vorkommen eines Teilstrings in einem String.
 * 
-* <p>Die Datenbankabfragen liefern XML-Fragmente als CLOB-Objekte zurück.
-* Diese Methode wird verwendet, um diese CLOB-Objekte in verarbeitbare 
-* String-Werte umzuwandeln.
-*
-* @param clobObject Das CLOB-Objekt, das das XML-Fragment enthält
-* @return Der extrahierte String-Inhalt des CLOBs
-* @throws SQLException Falls bei der CLOB-Verarbeitung ein Fehler auftritt
+* @param str Der String, in dem gesucht wird
+* @param findStr Der zu suchende Teilstring
+* @return Anzahl der Vorkommen des Teilstrings
 */
+private int countOccurrencies(String str, String findStr)
