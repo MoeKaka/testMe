@@ -1,8 +1,9 @@
 /**
-* Hilfsmethode zur Zählung der Vorkommen eines Teilstrings in einem String.
+* Hilfsmethode zur Erstellung eines Datums aus Jahr, Monat und Tag.
 * 
-* @param str Der String, in dem gesucht wird
-* @param findStr Der zu suchende Teilstring
-* @return Anzahl der Vorkommen des Teilstrings
+* @param year  Das Jahr
+* @param month Der Monat (1-12)
+* @param day   Der Tag des Monats
+* @return Das erstellte Datum
 */
-private int countOccurrencies(String str, String findStr)
+private Date getDate(int year, int month, int day)
