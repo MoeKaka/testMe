@@ -1,8 +1,9 @@
 /**
- * Prüft, ob der Berichtszeitraum verkürzt ist.
+ * Modifiziert das XML-Fragment durch zwei Operationen:
+ * 1. Entfernt das XYZ-Element, falls vorhanden
+ * 2. Setzt den Wert des ABC-Elements auf {@link #KAKA1}, falls nicht bereits gesetzt
  * 
- * @param repPerStart Startdatum des Berichtszeitraums
- * @param repPerEnd Enddatum des Berichtszeitraums
- * @return true, wenn der Berichtszeitraum verkürzt ist, sonst false
+ * @param xmlFragment Das zu modifizierende XML-Fragment
+ * @return Das modifizierte XML-Fragment
  */
-private boolean isReportingPeriodShortened(Date repPerStart, Date repPerEnd)
+private String removeXYZ_And_Set_ABC_Element_To_Kaka1(String xmlFragment)
