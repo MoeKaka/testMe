@@ -1,44 +1,7 @@
 /**
- * Diese Klasse wird verwendet, um XML-Fragmente nach ihren Ursprungsländern zu gruppieren.
- * Sie speichert das übertragende Land zusammen mit allen zugehörigen XML-Fragmenten.
+ * Ruft den Bericht und alle zugehörigen Bodies aus der Datenbank ab.
  * 
- * <p>Die Klasse bietet eine einfache Datenstruktur zur Verwaltung von Länder-Fragment-Beziehungen,
- * wobei jedes Fragment den Verlaufsdatensätzen aus der Datenbank entstammt.</p>
- * 
- * @author Systemgeneriert
- * @version 1.0
+ * @param reportId Die ID des abzurufenden Berichts
+ * @return QueriesResults Objekt mit den Abfrageergebnissen für den Bericht und die Bodies
+ * @throws DatabaseException wenn ein Datenbankfehler auftritt
  */
-private static class CountryFragments {
-    
-    /**
-     * Das übertragende Land, das die Berichte übermittelt hat,
-     * zu denen die Fragmente gehören.
-     */
-    String country;
-    
-    /**
-     * Liste der XML-Fragmente, die zu diesem Land gehören.
-     * Jedes Fragment enthält Daten aus den Verlaufsdatensätzen der Datenbank.
-     */
-    List<String> fragments;
-    
-    /**
-     * Konstruktor zum Erstellen eines neuen CountryFragments-Objekts.
-     * Initialisiert eine leere Fragment-Liste für das angegebene Land.
-     * 
-     * @param country Das Land, dem die Fragmente zugeordnet werden sollen
-     */
-    CountryFragments(String country) {
-        this.country = country;
-        this.fragments = new ArrayList<>();
-    }
-    
-    /**
-     * Fügt ein neues XML-Fragment zur Liste der Fragmente dieses Landes hinzu.
-     * 
-     * @param fragment Das hinzuzufügende XML-Fragment aus den Verlaufsdatensätzen
-     */
-    void addFragment(String fragment) {
-        fragments.add(fragment);
-    }
-}
