@@ -1,37 +1,44 @@
 /**
- * Repräsentiert XML-Fragmentdaten mit länderspezifischen Informationen und Referenzen.
- * Diese statische innere Klasse ist Teil der QueriesResults-Klasse und speichert
- * XML-Fragmente zusammen mit ihren zugehörigen Metadaten.
+ * Diese Klasse wird verwendet, um XML-Fragmente nach ihren Ursprungsländern zu gruppieren.
+ * Sie speichert das übertragende Land zusammen mit allen zugehörigen XML-Fragmenten.
  * 
- * @author [Autor]
- * @version [Version]
+ * <p>Die Klasse bietet eine einfache Datenstruktur zur Verwaltung von Länder-Fragment-Beziehungen,
+ * wobei jedes Fragment den Verlaufsdatensätzen aus der Datenbank entstammt.</p>
+ * 
+ * @author Systemgeneriert
+ * @version 1.0
  */
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public static class XmlFragmentData {
+private static class CountryFragments {
     
-    /** Das Länderkürzel für das XML-Fragment */
-    private String country;
-    
-    /** Die Melde-Referenz-ID des XML-Fragments */
-    private String mRefId;
-    
-    /** Der eigentliche XML-Fragment-Inhalt */
-    private String xmlFragment;
-
     /**
-     * Standardkonstruktor.
-     * Wird durch die @NoArgsConstructor-Annotation von Lombok generiert.
+     * Das übertragende Land, das die Berichte übermittelt hat,
+     * zu denen die Fragmente gehören.
      */
-
+    String country;
+    
     /**
-     * Konstruktor mit vollständiger Initialisierung aller Felder.
-     * Wird durch die @AllArgsConstructor-Annotation von Lombok generiert.
-     *
-     * @param country      Das Länderkürzel für das XML-Fragment
-     * @param mRefId       Die Melde-Referenz-ID des XML-Fragments
-     * @param xmlFragment  Der eigentliche XML-Fragment-Inhalt
+     * Liste der XML-Fragmente, die zu diesem Land gehören.
+     * Jedes Fragment enthält Daten aus den Verlaufsdatensätzen der Datenbank.
      */
+    List<String> fragments;
+    
+    /**
+     * Konstruktor zum Erstellen eines neuen CountryFragments-Objekts.
+     * Initialisiert eine leere Fragment-Liste für das angegebene Land.
+     * 
+     * @param country Das Land, dem die Fragmente zugeordnet werden sollen
+     */
+    CountryFragments(String country) {
+        this.country = country;
+        this.fragments = new ArrayList<>();
+    }
+    
+    /**
+     * Fügt ein neues XML-Fragment zur Liste der Fragmente dieses Landes hinzu.
+     * 
+     * @param fragment Das hinzuzufügende XML-Fragment aus den Verlaufsdatensätzen
+     */
+    void addFragment(String fragment) {
+        fragments.add(fragment);
+    }
 }
