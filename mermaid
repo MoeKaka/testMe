@@ -30,7 +30,52 @@ flowchart TD
 
     style Start fill:#9cf
     style End fill:#9cf
-	
+
+
+
+flowchart LR
+    User((Benutzer))
+    
+    subgraph Web[Web-Interface Komponente 3505]
+        UI[Berichtsauswahl<br/>und Bestätigung]
+    end
+    
+    subgraph Batch[Batch-Komponente 3504]
+        direction TB
+        Process[Tägliche Verarbeitung<br/>der ausgewählten Berichte]
+    end
+    
+    subgraph Service[Service-Komponente 3501]
+        Generate[Berichtserstellung<br/>Service]
+    end
+    
+    XYZ[XYZ System]
+    
+    %% Connections
+    User --> Web
+    Web --> Batch
+    Batch --> Service
+    Service --> Batch
+    Batch --> XYZ
+    
+    %% Add simple notes
+    style User fill:#f9f,stroke:#333
+    style XYZ fill:#ccf,stroke:#333
+    
+    %% Add descriptions
+    note1[Benutzer wählt mNames aus<br/>und bestätigt]
+    note2[Läuft einmal täglich]
+    note3[Erstellt XML-Berichte<br/>oder .geloescht-Dateien]
+    note4[Empfängt generierte Dateien]
+    
+    %% Link notes
+    User -.-> note1
+    Batch -.-> note2
+    Service -.-> note3
+    XYZ -.-> note4
+    
+    classDef note fill:#fff,stroke:#999,stroke-dasharray: 5 5
+    class note1,note2,note3,note4 note
 	
 	
 	
