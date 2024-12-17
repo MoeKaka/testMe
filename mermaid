@@ -1,0 +1,39 @@
+flowchart TD
+    Start([Start]) --> Input[/Input: Report ID/]
+    Input --> CheckExists{Report ID exists?}
+    
+    %% Path for non-existent report
+    CheckExists -->|No| Result0[Result Code: 0]
+    Result0 --> NullOutputs[XML Content: null<br>XML Filename: null]
+    NullOutputs --> End([End])
+    
+    %% Path for existing reports
+    CheckExists -->|Yes| CheckDeleted{Report deleted?}
+    
+    %% Path for deleted reports
+    CheckDeleted -->|Yes| CheckPrevSent{Previously sent<br>to XYZ?}
+    
+    %% Never sent to XYZ
+    CheckPrevSent -->|No| Result1[Result Code: 1]
+    Result1 --> NullOutputs2[XML Content: null<br>XML Filename: null]
+    NullOutputs2 --> End
+    
+    %% Previously sent to XYZ
+    CheckPrevSent -->|Yes| Result2[Result Code: 2]
+    Result2 --> DeletedFile[XML Content: null<br>XML Filename: *.geloescht]
+    DeletedFile --> End
+    
+    %% Path for active reports
+    CheckDeleted -->|No| Result3[Result Code: 3]
+    Result3 --> ValidFile[XML Content: generated XML<br>XML Filename: *.xml]
+    ValidFile --> End
+
+    style Start fill:#9cf
+    style End fill:#9cf
+	
+	
+	
+	
+	
+	
+	
