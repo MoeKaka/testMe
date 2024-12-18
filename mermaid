@@ -1,73 +1,11 @@
--- Script to drop all non-system indexes from KAKA2 schema
--- IMPORTANT: Take a backup before running this script
--- This script will not drop:
--- - Primary key indexes
--- - Unique key indexes that enforce unique constraints
--- - LOB indexes
+# Database connection settings
+driver: oracle.jdbc.OracleDriver
+url: jdbc:oracle:thin:@//your_host:1521/your_service_name
+username: your_username
+password: your_password
 
--- First, generate the drop statements for review
-WITH index_info AS (
-    SELECT owner,
-           index_name,
-           table_owner,
-           table_name,
-           uniqueness,
-           constraint_index
-    FROM all_indexes
-    WHERE owner = 'KAKA2'
-    AND index_type != 'LOB'
-    AND generated = 'N'
-),
-constraints AS (
-    SELECT index_owner,
-           index_name
-    FROM all_constraints
-    WHERE constraint_type IN ('P', 'U')
-)
-SELECT 'DROP INDEX ' || i.owner || '.' || i.index_name || ';' as drop_statement
-FROM index_info i
-LEFT JOIN constraints c
-    ON i.owner = c.index_owner
-    AND i.index_name = c.index_name
-WHERE c.index_name IS NULL
-ORDER BY i.index_name;
+# Change log file path
+changeLogFile: changelog.xml
 
--- To actually execute the drops:
-BEGIN
-    FOR r IN (
-        WITH index_info AS (
-            SELECT owner,
-                   index_name,
-                   table_owner,
-                   table_name,
-                   uniqueness,
-                   constraint_index
-            FROM all_indexes
-            WHERE owner = 'KAKA2'
-            AND index_type != 'LOB'
-            AND generated = 'N'
-        ),
-        constraints AS (
-            SELECT index_owner,
-                   index_name
-            FROM all_constraints
-            WHERE constraint_type IN ('P', 'U')
-        )
-        SELECT i.owner, i.index_name
-        FROM index_info i
-        LEFT JOIN constraints c
-            ON i.owner = c.index_owner
-            AND i.index_name = c.index_name
-        WHERE c.index_name IS NULL
-        ORDER BY i.index_name
-    ) LOOP
-        BEGIN
-            EXECUTE IMMEDIATE 'DROP INDEX ' || r.owner || '.' || r.index_name;
-            DBMS_OUTPUT.PUT_LINE('Successfully dropped index: ' || r.owner || '.' || r.index_name);
-        EXCEPTION
-            WHEN OTHERS THEN
-                DBMS_OUTPUT.PUT_LINE('Error dropping index: ' || r.owner || '.' || r.index_name || ' - ' || SQLERRM);
-        END;
-    END LOOP;
-END;
-/
+# Reference to your JDBC driver
+classpath: ojdbc8.jar
