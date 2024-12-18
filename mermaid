@@ -1,84 +1,73 @@
-flowchart TD
-    Start([Start]) --> Input[/Input: Report ID/]
-    Input --> CheckExists{Report ID exists?}
-    
-    %% Path for non-existent report
-    CheckExists -->|No| Result0[Result Code: 0]
-    Result0 --> NullOutputs[XML Content: null<br>XML Filename: null]
-    NullOutputs --> End([End])
-    
-    %% Path for existing reports
-    CheckExists -->|Yes| CheckDeleted{Report deleted?}
-    
-    %% Path for deleted reports
-    CheckDeleted -->|Yes| CheckPrevSent{Previously sent<br>to XYZ?}
-    
-    %% Never sent to XYZ
-    CheckPrevSent -->|No| Result1[Result Code: 1]
-    Result1 --> NullOutputs2[XML Content: null<br>XML Filename: null]
-    NullOutputs2 --> End
-    
-    %% Previously sent to XYZ
-    CheckPrevSent -->|Yes| Result2[Result Code: 2]
-    Result2 --> DeletedFile[XML Content: null<br>XML Filename: *.geloescht]
-    DeletedFile --> End
-    
-    %% Path for active reports
-    CheckDeleted -->|No| Result3[Result Code: 3]
-    Result3 --> ValidFile[XML Content: generated XML<br>XML Filename: *.xml]
-    ValidFile --> End
+-- Script to drop all non-system indexes from KAKA2 schema
+-- IMPORTANT: Take a backup before running this script
+-- This script will not drop:
+-- - Primary key indexes
+-- - Unique key indexes that enforce unique constraints
+-- - LOB indexes
 
-    style Start fill:#9cf
-    style End fill:#9cf
+-- First, generate the drop statements for review
+WITH index_info AS (
+    SELECT owner,
+           index_name,
+           table_owner,
+           table_name,
+           uniqueness,
+           constraint_index
+    FROM all_indexes
+    WHERE owner = 'KAKA2'
+    AND index_type != 'LOB'
+    AND generated = 'N'
+),
+constraints AS (
+    SELECT index_owner,
+           index_name
+    FROM all_constraints
+    WHERE constraint_type IN ('P', 'U')
+)
+SELECT 'DROP INDEX ' || i.owner || '.' || i.index_name || ';' as drop_statement
+FROM index_info i
+LEFT JOIN constraints c
+    ON i.owner = c.index_owner
+    AND i.index_name = c.index_name
+WHERE c.index_name IS NULL
+ORDER BY i.index_name;
 
-
-
-flowchart LR
-    User((Benutzer))
-    
-    subgraph Web[Web-Interface Komponente 3505]
-        UI[Berichtsauswahl<br/>und Bestätigung]
-    end
-    
-    subgraph Batch[Batch-Komponente 3504]
-        direction TB
-        Process[Tägliche Verarbeitung<br/>der ausgewählten Berichte]
-    end
-    
-    subgraph Service[Service-Komponente 3501]
-        Generate[Berichtserstellung<br/>Service]
-    end
-    
-    XYZ[XYZ System]
-    
-    %% Connections
-    User --> Web
-    Web --> Batch
-    Batch --> Service
-    Service --> Batch
-    Batch --> XYZ
-    
-    %% Add simple notes
-    style User fill:#f9f,stroke:#333
-    style XYZ fill:#ccf,stroke:#333
-    
-    %% Add descriptions
-    note1[Benutzer wählt mNames aus<br/>und bestätigt]
-    note2[Läuft einmal täglich]
-    note3[Erstellt XML-Berichte<br/>oder .geloescht-Dateien]
-    note4[Empfängt generierte Dateien]
-    
-    %% Link notes
-    User -.-> note1
-    Batch -.-> note2
-    Service -.-> note3
-    XYZ -.-> note4
-    
-    classDef note fill:#fff,stroke:#999,stroke-dasharray: 5 5
-    class note1,note2,note3,note4 note
-	
-	
-	
-	
-	
-	
+-- To actually execute the drops:
+BEGIN
+    FOR r IN (
+        WITH index_info AS (
+            SELECT owner,
+                   index_name,
+                   table_owner,
+                   table_name,
+                   uniqueness,
+                   constraint_index
+            FROM all_indexes
+            WHERE owner = 'KAKA2'
+            AND index_type != 'LOB'
+            AND generated = 'N'
+        ),
+        constraints AS (
+            SELECT index_owner,
+                   index_name
+            FROM all_constraints
+            WHERE constraint_type IN ('P', 'U')
+        )
+        SELECT i.owner, i.index_name
+        FROM index_info i
+        LEFT JOIN constraints c
+            ON i.owner = c.index_owner
+            AND i.index_name = c.index_name
+        WHERE c.index_name IS NULL
+        ORDER BY i.index_name
+    ) LOOP
+        BEGIN
+            EXECUTE IMMEDIATE 'DROP INDEX ' || r.owner || '.' || r.index_name;
+            DBMS_OUTPUT.PUT_LINE('Successfully dropped index: ' || r.owner || '.' || r.index_name);
+        EXCEPTION
+            WHEN OTHERS THEN
+                DBMS_OUTPUT.PUT_LINE('Error dropping index: ' || r.owner || '.' || r.index_name || ' - ' || SQLERRM);
+        END;
+    END LOOP;
+END;
+/
