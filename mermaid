@@ -1,11 +1,16 @@
-# Database connection settings
-driver: oracle.jdbc.OracleDriver
-url: jdbc:oracle:thin:@//your_host:1521/your_service_name
-username: your_username
-password: your_password
-
-# Change log file path
-changeLogFile: changelog.xml
-
-# Reference to your JDBC driver
-classpath: ojdbc8.jar
+SELECT 
+    t.table_name,
+    t.num_rows,
+    CASE 
+        WHEN t.num_rows = 0 OR t.num_rows IS NULL THEN 'Empty'
+        ELSE 'Not Empty'
+    END AS table_status,
+    t.last_analyzed
+FROM all_tables t
+WHERE t.owner = 'KAKA'
+ORDER BY 
+    CASE 
+        WHEN t.num_rows = 0 OR t.num_rows IS NULL THEN 1
+        ELSE 2
+    END,
+    t.table_name;
