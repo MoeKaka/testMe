@@ -1,3 +1,9 @@
-SELECT 'SELECT ''' || table_name || ''', COUNT(*) FROM KAKA.' || table_name || ';'
-FROM all_tables
-WHERE owner = 'KAKA';
+SELECT 
+    operation_type,
+    table_name,
+    CASE 
+        WHEN operation_type = 'INSERT' THEN operation_code
+        ELSE changed_column
+    END AS changes_info
+FROM your_table_name
+ORDER BY log_timestamp, log_id;
